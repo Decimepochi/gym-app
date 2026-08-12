@@ -658,8 +658,13 @@
                     <span class="text-[9px] bg-amber-950/60 text-amber-400 px-2 py-0.5 rounded font-bold border border-amber-800/40">1-Click Copy</span>
                 </div>
                 <p class="text-xs text-slate-400 leading-relaxed">
-                    Copiá el resumen en texto de tu semana para pegarlo en esta conversación y analizar juntos tu progresión de cargas o ajustar tu rutina.
+                    Copiá el resumen en texto para pegarlo en esta conversación o pasárselo a tu nutricionista/PF.
                 </p>
+                <div class="grid grid-cols-3 gap-1.5 text-[10px] font-bold">
+                    <button onclick="setReportRange('today')" id="report-range-today" class="py-1.5 rounded-lg bg-slate-800 text-slate-300 transition">Hoy</button>
+                    <button onclick="setReportRange('week')" id="report-range-week" class="py-1.5 rounded-lg bg-amber-500 text-slate-950 transition">Última Semana</button>
+                    <button onclick="setReportRange('all')" id="report-range-all" class="py-1.5 rounded-lg bg-slate-800 text-slate-300 transition">Todo</button>
+                </div>
                 <button onclick="copyAIReport()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition shadow active:scale-95 flex items-center justify-center gap-2">
                     <i class="fa-solid fa-copy"></i> Copiar Informe de Progreso para la IA
                 </button>
@@ -1231,9 +1236,9 @@
             { name: "Remo al mentón", type: "barbell" },
             // 4. Hombros
             { name: "Press militar de pie", type: "barbell" },
-            { name: "Press Arnold con mancuernas", type: "dumbbell" },
+            { name: "Press Arnold con Mancuernas", type: "dumbbell" },
             { name: "Press sentado con mancuernas", type: "dumbbell" },
-            { name: "Elevaciones laterales", type: "dumbbell" },
+            { name: "Elevaciones Laterales", type: "dumbbell" },
             { name: "Elevaciones frontales", type: "dumbbell" },
             // 5. Brazos (Bíceps y Tríceps)
             { name: "Curl de bíceps con barra", type: "barbell" },
@@ -1399,8 +1404,16 @@
 
         const PERIODIZABLE_TYPES = ['barbell', 'dumbbell', 'machine', 'cable'];
 
+        function findKeyIgnoreCase(obj, name) {
+            if (obj[name] !== undefined) return name;
+            const target = name.trim().toLowerCase();
+            return Object.keys(obj).find(k => k.trim().toLowerCase() === target) || null;
+        }
+
         function getOfficialRMEntry(exName) {
-            const v = officialRMs[exName];
+            const key = findKeyIgnoreCase(officialRMs, exName);
+            if (!key) return null;
+            const v = officialRMs[key];
             if (!v) return null;
             // Compatibilidad con el formato viejo (solo un número)
             if (typeof v === 'number') {
@@ -1504,7 +1517,8 @@
         }
 
         function getMaxWeightForExercise(exName) {
-            const exLogs = logs.filter(l => l.exercise === exName);
+            const target = exName.trim().toLowerCase();
+            const exLogs = logs.filter(l => l.exercise && l.exercise.trim().toLowerCase() === target);
             if (exLogs.length === 0) return 0;
             return Math.max(...exLogs.map(l => l.weight || 0));
         }
@@ -1702,8 +1716,8 @@
                         `;
                     } else if (isPeriodizable && !rmEntry) {
                         planBoxHtml = `
-                            <div class="bg-slate-950 rounded-xl p-2.5 border border-slate-800/80 flex items-center justify-between text-xs">
-                                <span class="text-[10px] text-slate-400">Todavía no tenés un Test de Carga guardado para este ejercicio.</span>
+                            <div class="bg-slate-950 rounded-xl p-2.5 border border-slate-800/80 flex items-center justify-between text-xs gap-2">
+                                <span class="text-[10px] text-slate-400">Sin Test de Carga guardado. ${maxHistorical > 0 ? 'Tu "Último Máx" es de una serie normal, no de un test — hacé el test para que la app te calcule las series solas.' : 'Hacé el test para que la app te calcule las series solas.'}</span>
                                 <button onclick="goToTestForExercise('${ex.name}')" class="px-2 py-1 bg-teal-500 hover:bg-teal-400 text-slate-950 text-[10px] font-black rounded-lg transition shrink-0 ml-2">
                                     <i class="fa-solid fa-vial-circle-check"></i> Hacer Test
                                 </button>
@@ -2939,11 +2953,43 @@
             });
         }
 
+        let reportRange = 'week';
+
+        function setReportRange(range) {
+            reportRange = range;
+            ['today', 'week', 'all'].forEach(r => {
+                const btn = document.getElementById(`report-range-${r}`);
+                if (!btn) return;
+                btn.className = r === range
+                    ? 'py-1.5 rounded-lg bg-amber-500 text-slate-950 transition'
+                    : 'py-1.5 rounded-lg bg-slate-800 text-slate-300 transition';
+            });
+        }
+
+        function getReportRangeStart(range) {
+            const d = new Date();
+            if (range === 'today') return d.toISOString().split('T')[0];
+            if (range === 'week') {
+                d.setDate(d.getDate() - 7);
+                return d.toISOString().split('T')[0];
+            }
+            return null; // 'all'
+        }
+
         function copyAIReport() {
-            const recentLogs = logs.slice(0, 15);
-            const recentCourt = courtLogs.slice(0, 3);
+            const todayStr = new Date().toISOString().split('T')[0];
+            const rangeStart = getReportRangeStart(reportRange);
+            const rangeLabel = reportRange === 'today' ? 'Hoy' : (reportRange === 'week' ? `Última Semana (desde ${rangeStart})` : 'Todo el Historial');
+
+            const inRange = (dateStr) => !rangeStart || (dateStr >= rangeStart && dateStr <= todayStr);
+
+            const filteredLogs = logs.filter(l => inRange(l.date));
+            const filteredCourt = courtLogs.filter(c => inRange(c.date));
+            const filteredExtra = extraSessions.filter(e => inRange(e.date));
+            const filteredFinished = Object.entries(finishedSessions).filter(([date]) => inRange(date));
 
             let reportText = `🏋️‍♂️ INFORME DE PROGRESO & BÁSQUET - GYMTRACKER PRO\n`;
+            reportText += `Rango del informe: ${rangeLabel}\n`;
             reportText += `Fecha de extracción: ${new Date().toLocaleDateString()}\n`;
             if (bodyWeightLogs.length > 0) {
                 reportText += `Peso Corporal Actual: ${bodyWeightLogs[0].weight} kg (registrado el ${formatDateEs(bodyWeightLogs[0].date)})\n`;
@@ -2951,12 +2997,10 @@
             reportText += `Bloque de Periodización: Semana ${trainingBlock.week}/4 (${WEEK_PHASES[trainingBlock.week].label})\n`;
             reportText += `\n`;
 
-            const recentFinished = Object.entries(finishedSessions)
-                .sort((a, b) => new Date(b[0]) - new Date(a[0]))
-                .slice(0, 10);
-            if (recentFinished.length > 0) {
-                reportText += `✅ SESIONES FINALIZADAS (últimas):\n`;
-                recentFinished.forEach(([date, f]) => {
+            const sortedFinished = filteredFinished.sort((a, b) => new Date(b[0]) - new Date(a[0]));
+            if (sortedFinished.length > 0) {
+                reportText += `✅ SESIONES FINALIZADAS:\n`;
+                sortedFinished.forEach(([date, f]) => {
                     const metricsParts = [];
                     if (f.time) metricsParts.push(`Tiempo: ${f.time}`);
                     if (f.kcal) metricsParts.push(`${f.kcal} kcal`);
@@ -2965,27 +3009,52 @@
                 });
                 reportText += `\n`;
             }
-            
-            reportText += `📊 ÚLTIMAS SERIES EN GIMNASIO:\n`;
-            recentLogs.forEach(l => {
-                if (l.type === 'hiit') {
-                    reportText += `- ${l.date} | ${l.exercise}: ${l.avgTime}s promedio por pasada [${l.rpeFinal}] · Sensación de aire: ${l.airFeeling}\n`;
-                } else {
-                    reportText += `- ${l.date} | ${l.exercise}: ${l.weight} kg x ${l.reps} reps [${l.rpe || 'RPE 8'}] ${l.notes ? '(' + l.notes + ')' : ''}\n`;
-                }
-            });
+
+            // Agrupar las series de gimnasio por día, para ver la sesión completa de cada fecha
+            reportText += `📊 SESIONES DE GIMNASIO (${rangeLabel}):\n`;
+            if (filteredLogs.length === 0) {
+                reportText += `(Sin series registradas en este rango)\n`;
+            } else {
+                const logsByDate = {};
+                filteredLogs.forEach(l => {
+                    if (!logsByDate[l.date]) logsByDate[l.date] = [];
+                    logsByDate[l.date].push(l);
+                });
+                const sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(b) - new Date(a));
+                sortedDates.forEach(date => {
+                    reportText += `\n📅 ${formatDateEs(date)} (${logsByDate[date].length} series):\n`;
+                    logsByDate[date].forEach(l => {
+                        if (l.type === 'hiit') {
+                            reportText += `  - ${l.exercise}: ${l.avgTime}s promedio por pasada [${l.rpeFinal}] · Sensación de aire: ${l.airFeeling}\n`;
+                        } else {
+                            reportText += `  - ${l.exercise}: ${l.weight} kg x ${l.reps} reps [${l.rpe || 'RPE 8'}] ${l.notes ? '(' + l.notes + ')' : ''}\n`;
+                        }
+                    });
+                });
+            }
 
             reportText += `\n🏀 ESTADÍSTICAS DE PARTIDOS & BOX SCORE:\n`;
-            recentCourt.forEach(c => {
-                reportText += `- ${c.date} vs ${c.rival} (${c.result}) | ${c.pts} PTS (${c.t3}x3P, ${c.t2}x2P, ${c.t1}xTL) | ${c.reb} REB | ${c.ast} AST | ${c.stl} STL | ${c.to} TO | MIN: ${c.min} | EFF: +${c.eff}\n`;
-                reportText += `  [Estado Físico]: Explosividad ${c.fatigue}/10 | Molestias: ${c.pain} | Notas: ${c.notes}\n`;
-            });
+            if (filteredCourt.length === 0) {
+                reportText += `(Sin partidos registrados en este rango)\n`;
+            } else {
+                filteredCourt.forEach(c => {
+                    reportText += `- ${c.date} vs ${c.rival} (${c.result}) | ${c.pts} PTS (${c.t3}x3P, ${c.t2}x2P, ${c.t1}xTL) | ${c.reb} REB | ${c.ast} AST | ${c.stl} STL | ${c.to} TO | MIN: ${c.min} | EFF: +${c.eff}\n`;
+                    reportText += `  [Estado Físico]: Explosividad ${c.fatigue}/10 | Molestias: ${c.pain} | Notas: ${c.notes}\n`;
+                });
+            }
 
-            const recentExtra = extraSessions.slice(-15).reverse();
-            if (recentExtra.length > 0) {
+            if (filteredExtra.length > 0) {
                 reportText += `\n🗓️ SESIONES EXTRA (fuera de la rutina fija):\n`;
-                recentExtra.forEach(e => {
-                    reportText += `- ${e.date} | ${e.name}: ${e.sets} series x ${e.reps} reps\n`;
+                const extraByDate = {};
+                filteredExtra.forEach(e => {
+                    if (!extraByDate[e.date]) extraByDate[e.date] = [];
+                    extraByDate[e.date].push(e);
+                });
+                Object.keys(extraByDate).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+                    reportText += `\n📅 ${formatDateEs(date)}:\n`;
+                    extraByDate[date].forEach(e => {
+                        reportText += `  - ${e.name}: ${e.sets} series x ${e.reps} reps\n`;
+                    });
                 });
             }
 
