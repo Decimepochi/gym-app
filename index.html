@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js CDN para Analítica -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -668,6 +669,9 @@
                 <button onclick="copyAIReport()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition shadow active:scale-95 flex items-center justify-center gap-2">
                     <i class="fa-solid fa-copy"></i> Copiar Informe de Progreso para la IA
                 </button>
+                <button onclick="exportToExcel()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black py-2.5 rounded-xl text-xs transition shadow active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-excel"></i> Exportar a Excel (.xlsx)
+                </button>
             </div>
 
             <!-- Copia de Seguridad & Datos -->
@@ -809,8 +813,9 @@
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 block mb-1">Tipo de Equipamiento (Motor de Redondeo):</label>
                     <select id="quick-ex-type" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 font-bold">
-                        <option value="barbell">🏋️ Barra y Discos (Salto de 2.5 kg)</option>
-                        <option value="dumbbell">🪙 Mancuernas (Redondeo entero limpio)</option>
+                        <option value="barbell">🏋️ Barra Olímpica (Salto de 2.5 kg)</option>
+                        <option value="ez_bar">📏 Barra Fina / EZ (Salto de 2 kg)</option>
+                        <option value="dumbbell">🪙 Mancuernas (1kg hasta 10kg, luego 2.5kg)</option>
                         <option value="machine">🧱 Máquina (Salto de 5 kg)</option>
                         <option value="cable">🪢 Polea (Salto de 2.5 kg)</option>
                         <option value="bodyweight">🤸 Peso Corporal</option>
@@ -862,7 +867,8 @@
                 <div id="extra-ex-type-wrapper">
                     <label class="text-[10px] font-bold text-slate-400 block mb-1">Tipo de Equipamiento:</label>
                     <select id="extra-ex-type" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-bold">
-                        <option value="barbell">🏋️ Barra y Discos</option>
+                        <option value="barbell">🏋️ Barra Olímpica</option>
+                        <option value="ez_bar">📏 Barra Fina / EZ</option>
                         <option value="dumbbell">🪙 Mancuernas</option>
                         <option value="machine">🧱 Máquina</option>
                         <option value="cable">🪢 Polea</option>
@@ -1185,6 +1191,8 @@
             }
 
             initExerciseCatalog();
+            canonicalizeExerciseNames();
+            fixEquipmentTypes();
             loadProfileFields();
             renderBlockIndicator();
             renderDaySelector();
@@ -1241,11 +1249,11 @@
             { name: "Elevaciones Laterales", type: "dumbbell" },
             { name: "Elevaciones frontales", type: "dumbbell" },
             // 5. Brazos (Bíceps y Tríceps)
-            { name: "Curl de bíceps con barra", type: "barbell" },
+            { name: "Curl de bíceps con barra", type: "ez_bar" },
             { name: "Curl de bíceps con mancuernas", type: "dumbbell" },
             { name: "Curl de bíceps en polea baja", type: "cable" },
-            { name: "Curl concentrado o en banco Scott", type: "barbell" },
-            { name: "Press francés para tríceps", type: "barbell" },
+            { name: "Curl concentrado o en banco Scott", type: "ez_bar" },
+            { name: "Press francés para tríceps", type: "ez_bar" },
             { name: "Extensiones de tríceps en polea alta", type: "cable" },
             { name: "Extensiones de tríceps patada de burro", type: "dumbbell" },
             { name: "Fondos en banco / paralelas", type: "bodyweight" },
@@ -1258,7 +1266,6 @@
             { name: "Crunches tradicionales", type: "bodyweight" },
             // Rutina ajustada (Martes/Miércoles/Viernes/Sábado)
             { name: "Power Clean / Cargada", type: "barbell" },
-            { name: "Combo Vuelos + Bíceps", type: "dumbbell" },
             { name: "Plancha con Toque de Hombro", type: "bodyweight" },
             { name: "Plancha Lateral", type: "bodyweight" },
             { name: "Deadbug con Disco", type: "accessory" },
@@ -1272,7 +1279,15 @@
             { name: "Isometría de Oblicuos en Banco", type: "bodyweight" },
             { name: "Abdominales con Disco Elevado", type: "accessory" },
             { name: "Mountain Climbers Lentos", type: "bodyweight" },
-            { name: "Circuito Hombros + Bíceps + Tríceps", type: "dumbbell" }
+            // Faltaban en la base — son de la rutina actual y por eso Testeos no los ofrecía
+            { name: "Press de Banca Plano", type: "barbell" },
+            { name: "Remo con Mancuerna / Barra", type: "dumbbell" },
+            { name: "Press Militar de Hombros", type: "barbell" },
+            { name: "Press Inclinado con Mancuernas", type: "dumbbell" },
+            { name: "Remo en Polea Baja", type: "cable" },
+            { name: "Curl Martillo Alternado", type: "dumbbell" },
+            { name: "Curl Concentrado a Una Mano", type: "dumbbell" },
+            { name: "Extensión de Tríceps en Polea con Cuerda", type: "cable" }
         ];
 
         function seedMasterExerciseList() {
@@ -1288,6 +1303,116 @@
                 }
             });
             if (added) saveExerciseCatalog();
+        }
+
+        // Duplicados que no son solo diferencia de mayúsculas (nombres reformulados del mismo ejercicio)
+        const EXERCISE_ALIAS_MAP = {
+            "remo en polea baja (sentada)": "Remo en Polea Baja",
+            "curl de bíceps martillo alternado": "Curl Martillo Alternado"
+        };
+
+        function canonicalizeExerciseNames() {
+            // Nombre "oficial" de cada ejercicio según la rutina fija actual
+            const canonicalByLower = {};
+            Object.values(DEFAULT_ROUTINES).forEach(r => {
+                r.exercises.forEach(ex => {
+                    canonicalByLower[ex.name.trim().toLowerCase()] = ex.name;
+                });
+            });
+
+            function effectiveKey(name) {
+                const lower = name.trim().toLowerCase();
+                return EXERCISE_ALIAS_MAP[lower] ? EXERCISE_ALIAS_MAP[lower].trim().toLowerCase() : lower;
+            }
+
+            // Agrupar el catálogo actual por nombre normalizado (o su alias, si tiene uno)
+            const groups = {};
+            exerciseCatalog.forEach(e => {
+                const key = effectiveKey(e.name);
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(e);
+            });
+
+            const renameMap = {}; // nombre viejo exacto -> nombre canónico
+            const newCatalog = [];
+
+            Object.entries(groups).forEach(([key, entries]) => {
+                const canonicalName = canonicalByLower[key] || entries[0].name;
+                const canonicalType = (entries.find(e => e.name === canonicalName) || entries[0]).type;
+                newCatalog.push({ name: canonicalName, type: canonicalType });
+                entries.forEach(e => {
+                    if (e.name !== canonicalName) renameMap[e.name] = canonicalName;
+                });
+            });
+
+            const oldNames = Object.keys(renameMap);
+            if (oldNames.length === 0) return; // nada para unificar
+
+            exerciseCatalog = newCatalog;
+            saveExerciseCatalog();
+
+            // Migrar los Tests de Carga (officialRMs) al nombre correcto, sin perder el más reciente
+            let rmChanged = false;
+            oldNames.forEach(oldName => {
+                const newName = renameMap[oldName];
+                const oldVal = officialRMs[oldName];
+                if (oldVal === undefined) return;
+                const newVal = officialRMs[newName];
+                if (newVal === undefined) {
+                    officialRMs[newName] = oldVal;
+                } else {
+                    const oldDate = (typeof oldVal === 'object' && oldVal.testDate) ? oldVal.testDate : '';
+                    const newDate = (typeof newVal === 'object' && newVal.testDate) ? newVal.testDate : '';
+                    if (oldDate > newDate) officialRMs[newName] = oldVal;
+                }
+                delete officialRMs[oldName];
+                rmChanged = true;
+            });
+            if (rmChanged) localStorage.setItem('fit_official_rms_v1', JSON.stringify(officialRMs));
+
+            // Migrar las series ya cargadas (historial) al nombre correcto
+            let logsChanged = false;
+            logs.forEach(l => {
+                if (renameMap[l.exercise]) {
+                    l.exercise = renameMap[l.exercise];
+                    logsChanged = true;
+                }
+            });
+            if (logsChanged) localStorage.setItem('fit_logs_v4', JSON.stringify(logs));
+
+            // Migrar ejercicios personalizados por si tenían el nombre viejo
+            let customChanged = false;
+            Object.keys(customExercises).forEach(day => {
+                (customExercises[day] || []).forEach(ex => {
+                    if (renameMap[ex.name]) {
+                        ex.name = renameMap[ex.name];
+                        customChanged = true;
+                    }
+                });
+            });
+            if (customChanged) localStorage.setItem('fit_custom_ex_v1', JSON.stringify(customExercises));
+
+            showToast(`🧹 Se unificaron ${oldNames.length} ejercicio(s) duplicado(s) — tus tests y series quedaron a salvo.`);
+        }
+
+        // Corrige el tipo de equipamiento de ejercicios ya guardados en catálogos existentes
+        // (ej: pasaron de "barra olímpica" a "barra fina/EZ" al ajustar los redondeos con el equipamiento real)
+        const EQUIPMENT_TYPE_FIXES = {
+            "curl de bíceps con barra": "ez_bar",
+            "curl concentrado o en banco scott": "ez_bar",
+            "press francés para tríceps": "ez_bar"
+        };
+
+        function fixEquipmentTypes() {
+            let changed = false;
+            exerciseCatalog.forEach(e => {
+                const key = e.name.trim().toLowerCase();
+                if (EQUIPMENT_TYPE_FIXES[key] && e.type !== EQUIPMENT_TYPE_FIXES[key]) {
+                    e.type = EQUIPMENT_TYPE_FIXES[key];
+                    changed = true;
+                }
+            });
+            if (changed) saveExerciseCatalog();
         }
 
         function initExerciseCatalog() {
@@ -1402,7 +1527,7 @@
             4: { label: 'Descarga / Deload', color: 'text-blue-400' }
         };
 
-        const PERIODIZABLE_TYPES = ['barbell', 'dumbbell', 'machine', 'cable'];
+        const PERIODIZABLE_TYPES = ['barbell', 'ez_bar', 'dumbbell', 'machine', 'cable'];
 
         function findKeyIgnoreCase(obj, name) {
             if (obj[name] !== undefined) return name;
@@ -1503,13 +1628,23 @@
             if (!weight || weight <= 0) return 0;
 
             if (type === 'barbell') {
+                // Barra olímpica (20kg) + discos: el salto mínimo real es 2.5kg (par de discos de 1.25kg)
                 return Math.round(weight / 2.5) * 2.5;
+            } else if (type === 'ez_bar') {
+                // Barra fina/EZ (curl, press francés): discos de 1kg por lado = salto de 2kg
+                return Math.round(weight / 2) * 2;
             } else if (type === 'dumbbell') {
-                return Math.round(weight);
+                // Mancuernas del gym: de a 1kg hasta 10kg, de ahí en más de a 2.5kg
+                if (weight <= 10) {
+                    return Math.round(weight);
+                }
+                return Math.round(weight / 2.5) * 2.5;
             } else if (type === 'machine') {
+                // Máquinas con stack de ladrillos: de a 5kg
                 return Math.round(weight / 5) * 5;
             } else if (type === 'cable') {
-                return Math.round(weight / 2.5) * 2.5;
+                // Polea: mismo stack de ladrillos de 5kg que las máquinas
+                return Math.round(weight / 5) * 5;
             } else if (type === 'bodyweight' || type === 'accessory') {
                 return Math.round(weight);
             }
@@ -1687,12 +1822,18 @@
 
                     let suggestedKg = 0;
                     let periodizedSets = null;
+                    let suggestedReps = 8;
+                    let nextSetIndex = 0;
                     if (isPeriodizable && rmEntry) {
                         periodizedSets = computePeriodizedSets(rmEntry.cargaObjetivo, ex.type, trainingBlock.week);
-                        suggestedKg = periodizedSets[0].weight;
+                        nextSetIndex = Math.min(doneLogs.length, periodizedSets.length - 1);
+                        suggestedKg = periodizedSets[nextSetIndex].weight;
+                        suggestedReps = periodizedSets[nextSetIndex].reps;
                     } else if (maxHistorical > 0) {
                         suggestedKg = maxHistorical;
                     }
+
+                    const planCompleted = periodizedSets && doneLogs.length >= periodizedSets.length;
 
                     let planBoxHtml = '';
                     if (isPeriodizable && periodizedSets) {
@@ -1707,11 +1848,12 @@
                                 </div>
                                 <div class="flex flex-wrap gap-1.5">
                                     ${periodizedSets.map((s, i) => `
-                                        <span class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 font-mono text-[10px] text-emerald-400 font-bold">
+                                        <span class="bg-slate-900 border ${i === nextSetIndex && !planCompleted ? 'border-emerald-400 ring-1 ring-emerald-400/50' : 'border-slate-800'} rounded-lg px-2 py-1 font-mono text-[10px] text-emerald-400 font-bold">
                                             S${i + 1}: ${s.weight}kg x${s.reps} <span class="text-slate-500">(${s.pct}%)</span>
                                         </span>
                                     `).join('')}
                                 </div>
+                                ${planCompleted ? '<p class="text-[9px] text-emerald-400 font-bold">✅ Completaste el plan de hoy — quedó cargado el peso de la última serie por si querés sumar una extra.</p>' : ''}
                             </div>
                         `;
                     } else if (isPeriodizable && !rmEntry) {
@@ -1769,7 +1911,7 @@
                         <div class="space-y-2">
                             <div class="grid grid-cols-4 gap-1.5 font-mono text-xs">
                                 <input type="text" inputmode="decimal" id="input-w-${ex.id}" placeholder="Kg" value="${suggestedKg > 0 ? suggestedKg : ''}" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-1.5 text-center text-white focus:outline-none focus:border-amber-500">
-                                <input type="number" id="input-r-${ex.id}" placeholder="Reps" value="8" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-1.5 text-center text-white focus:outline-none focus:border-amber-500">
+                                <input type="number" id="input-r-${ex.id}" placeholder="Reps" value="${suggestedReps}" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-1.5 text-center text-white focus:outline-none focus:border-amber-500">
                                 <select id="input-rpe-${ex.id}" class="bg-slate-950 border border-slate-700 rounded-xl px-1 py-1.5 text-center text-amber-400 font-bold text-[10px] focus:outline-none">
                                     <option value="RPE 8">RPE 8</option>
                                     <option value="RPE 9">RPE 9</option>
@@ -2775,11 +2917,11 @@
             const reps = document.getElementById('extra-ex-reps').value.trim();
             const date = getExtraSelectedDate();
 
-            let name;
+            let name, type;
 
             if (select.value === '__new__') {
                 name = document.getElementById('extra-ex-name').value.trim();
-                const type = document.getElementById('extra-ex-type').value;
+                type = document.getElementById('extra-ex-type').value;
 
                 if (!name) {
                     showToast("⚠️ Escribí el nombre del ejercicio.");
@@ -2788,14 +2930,17 @@
                 addToExerciseCatalog(name, type);
             } else {
                 name = select.value;
+                const catalogEx = exerciseCatalog.find(e => e.name === name);
+                type = catalogEx ? catalogEx.type : 'dumbbell';
             }
 
             extraSessions.push({
                 id: Date.now(),
                 date: date,
                 name: name,
-                sets: sets || '-',
-                reps: reps || '-'
+                type: type,
+                targetSets: parseInt(sets) || 3,
+                targetReps: reps || '10'
             });
 
             localStorage.setItem('fit_extra_sessions_v1', JSON.stringify(extraSessions));
@@ -2826,17 +2971,81 @@
                 return;
             }
 
-            container.innerHTML = todaysExtra.map(e => `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-center justify-between shadow-md">
-                    <div>
-                        <p class="text-xs font-black text-white">${e.name}</p>
-                        <p class="text-[10px] text-slate-400 font-semibold">${e.sets} series x ${e.reps} reps</p>
+            container.innerHTML = '';
+            todaysExtra.forEach(e => {
+                const doneLogs = logs.filter(l => l.date === date && l.exercise === e.name);
+                const maxHistorical = getMaxWeightForExercise(e.name);
+                const suggested = maxHistorical > 0 ? maxHistorical : '';
+                const suggestedReps = parseInt(e.targetReps) || 10;
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3 shadow-md';
+                card.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-xs font-black text-white">${e.name}</h3>
+                            <p class="text-[10px] text-slate-400 font-semibold">Objetivo: ${e.targetSets} series x ${e.targetReps} reps</p>
+                        </div>
+                        <button onclick="deleteExtraExercise(${e.id})" class="text-slate-600 hover:text-red-400 transition text-xs" title="Eliminar de la sesión">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
                     </div>
-                    <button onclick="deleteExtraExercise(${e.id})" class="text-slate-600 hover:text-red-400 transition text-xs">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            `).join('');
+
+                    <div class="grid grid-cols-4 gap-1.5 font-mono text-xs">
+                        <input type="text" inputmode="decimal" id="extra-input-w-${e.id}" placeholder="Kg" value="${suggested}" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-1.5 text-center text-white focus:outline-none focus:border-purple-500">
+                        <input type="number" id="extra-input-r-${e.id}" placeholder="Reps" value="${suggestedReps}" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-1.5 text-center text-white focus:outline-none focus:border-purple-500">
+                        <select id="extra-input-rpe-${e.id}" class="bg-slate-950 border border-slate-700 rounded-xl px-1 py-1.5 text-center text-amber-400 font-bold text-[10px] focus:outline-none">
+                            <option value="RPE 8">RPE 8</option>
+                            <option value="RPE 9">RPE 9</option>
+                            <option value="RPE 10">RPE 10</option>
+                            <option value="RPE 7">RPE 7</option>
+                        </select>
+                        <button onclick="registerExtraSet(${e.id}, '${e.name}')" class="bg-purple-500 hover:bg-purple-400 text-slate-950 font-black rounded-xl transition shadow active:scale-95 flex items-center justify-center gap-1 text-[11px]">
+                            <i class="fa-solid fa-check"></i> Anotar
+                        </button>
+                    </div>
+
+                    <div id="extra-sets-today-${e.id}" class="space-y-1 font-mono text-[11px]">
+                        ${doneLogs.map((l, i) => `
+                            <div class="bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800/80 flex items-center justify-between text-slate-300">
+                                <span>Serie ${i + 1}: <strong class="text-emerald-400">${l.weight} kg</strong> x <strong>${l.reps} reps</strong> <span class="text-[9px] text-amber-400 bg-amber-950/60 px-1 rounded">${l.rpe || 'RPE 8'}</span></span>
+                                <button onclick="deleteLog(${l.id})" class="text-slate-600 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function registerExtraSet(exId, exName) {
+            const wInput = document.getElementById(`extra-input-w-${exId}`);
+            const rInput = document.getElementById(`extra-input-r-${exId}`);
+            const rpeInput = document.getElementById(`extra-input-rpe-${exId}`);
+
+            const weight = parseDecimal(wInput?.value);
+            const reps = parseInt(rInput?.value) || 0;
+            const rpe = rpeInput?.value || 'RPE 8';
+            const date = getExtraSelectedDate();
+
+            if (weight <= 0 || reps <= 0) {
+                showToast('⚠️ Ingresá peso y repeticiones válidos.');
+                return;
+            }
+
+            logs.unshift({
+                id: Date.now(),
+                date: date,
+                exercise: exName,
+                weight: weight,
+                reps: reps,
+                rpe: rpe,
+                notes: 'Sesión Extra'
+            });
+
+            localStorage.setItem('fit_logs_v4', JSON.stringify(logs));
+            showToast(`✅ Serie anotada: ${weight}kg x ${reps} reps`);
+            renderExtraSession();
         }
 
         function renderExtraSessionAllHistory() {
@@ -2863,7 +3072,7 @@
                     <div class="space-y-1">
                         ${byDate[date].map(e => `
                             <p class="text-[11px] text-slate-300 flex items-center justify-between">
-                                <span>${e.name} <span class="text-slate-500">(${e.sets}x${e.reps})</span></span>
+                                <span>${e.name} <span class="text-slate-500">(${e.targetSets}x${e.targetReps})</span></span>
                                 <button onclick="deleteExtraExercise(${e.id})" class="text-slate-600 hover:text-red-400 ml-2"><i class="fa-solid fa-trash"></i></button>
                             </p>
                         `).join('')}
@@ -2976,17 +3185,24 @@
             return null; // 'all'
         }
 
-        function copyAIReport() {
+        function getFilteredReportData() {
             const todayStr = new Date().toISOString().split('T')[0];
             const rangeStart = getReportRangeStart(reportRange);
             const rangeLabel = reportRange === 'today' ? 'Hoy' : (reportRange === 'week' ? `Última Semana (desde ${rangeStart})` : 'Todo el Historial');
-
             const inRange = (dateStr) => !rangeStart || (dateStr >= rangeStart && dateStr <= todayStr);
 
-            const filteredLogs = logs.filter(l => inRange(l.date));
-            const filteredCourt = courtLogs.filter(c => inRange(c.date));
-            const filteredExtra = extraSessions.filter(e => inRange(e.date));
-            const filteredFinished = Object.entries(finishedSessions).filter(([date]) => inRange(date));
+            return {
+                rangeLabel,
+                filteredLogs: logs.filter(l => inRange(l.date)),
+                filteredCourt: courtLogs.filter(c => inRange(c.date)),
+                filteredExtra: extraSessions.filter(e => inRange(e.date)),
+                filteredFinished: Object.entries(finishedSessions).filter(([date]) => inRange(date)),
+                filteredBodyWeight: bodyWeightLogs.filter(b => inRange(b.date))
+            };
+        }
+
+        function copyAIReport() {
+            const { rangeLabel, filteredLogs, filteredCourt, filteredExtra, filteredFinished } = getFilteredReportData();
 
             let reportText = `🏋️‍♂️ INFORME DE PROGRESO & BÁSQUET - GYMTRACKER PRO\n`;
             reportText += `Rango del informe: ${rangeLabel}\n`;
@@ -3053,7 +3269,7 @@
                 Object.keys(extraByDate).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
                     reportText += `\n📅 ${formatDateEs(date)}:\n`;
                     extraByDate[date].forEach(e => {
-                        reportText += `  - ${e.name}: ${e.sets} series x ${e.reps} reps\n`;
+                        reportText += `  - ${e.name}: objetivo ${e.targetSets} series x ${e.targetReps} reps\n`;
                     });
                 });
             }
@@ -3071,6 +3287,88 @@
         }
 
         // RESPALDO JSON
+        function exportToExcel() {
+            if (typeof XLSX === 'undefined') {
+                showToast('⚠️ No se pudo cargar la librería de Excel. Revisá tu conexión a internet e intentá de nuevo.');
+                return;
+            }
+
+            const { rangeLabel, filteredLogs, filteredCourt, filteredExtra, filteredFinished, filteredBodyWeight } = getFilteredReportData();
+            const wb = XLSX.utils.book_new();
+
+            // Hoja 1: Series de Gimnasio
+            const seriesRows = filteredLogs.map(l => {
+                if (l.type === 'hiit') {
+                    return {
+                        Fecha: l.date,
+                        Ejercicio: l.exercise,
+                        'Tiempo promedio (s)': l.avgTime,
+                        'RPE Final': l.rpeFinal,
+                        'Sensación de Aire': l.airFeeling
+                    };
+                }
+                return {
+                    Fecha: l.date,
+                    Ejercicio: l.exercise,
+                    'Peso (kg)': l.weight,
+                    Reps: l.reps,
+                    RPE: l.rpe || '',
+                    Notas: l.notes || ''
+                };
+            });
+            if (seriesRows.length > 0) {
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(seriesRows), 'Series Gimnasio');
+            }
+
+            // Hoja 2: Partidos
+            const courtRows = filteredCourt.map(c => ({
+                Fecha: c.date, Rival: c.rival, Resultado: c.result, PTS: c.pts,
+                '3P': c.t3, '2P': c.t2, 'TL': c.t1, REB: c.reb, AST: c.ast,
+                STL: c.stl, TO: c.to, BLK: c.blk, PF: c.pf, MIN: c.min, EFF: c.eff,
+                'Explosividad (1-10)': c.fatigue, Molestias: c.pain, 'Rol en cancha': c.roleNotes || '', Notas: c.notes
+            }));
+            if (courtRows.length > 0) {
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(courtRows), 'Partidos');
+            }
+
+            // Hoja 3: Sesiones Extra
+            const extraRows = filteredExtra.map(e => ({
+                Fecha: e.date, Ejercicio: e.name,
+                'Series Objetivo': e.targetSets, 'Reps Objetivo': e.targetReps
+            }));
+            if (extraRows.length > 0) {
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(extraRows), 'Sesiones Extra');
+            }
+
+            // Hoja 4: Sesiones Finalizadas
+            const finishedRows = filteredFinished
+                .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+                .map(([date, f]) => ({
+                    Fecha: date, Día: f.day, 'Series Hechas': f.done, 'Series Total': f.total,
+                    'Semana de Bloque': f.blockWeek || '', 'Tiempo': f.time || '',
+                    'Kcal': f.kcal || '', 'FC Media': f.hr || ''
+                }));
+            if (finishedRows.length > 0) {
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(finishedRows), 'Sesiones Finalizadas');
+            }
+
+            // Hoja 5: Peso Corporal
+            const bwRows = filteredBodyWeight.map(b => ({ Fecha: b.date, 'Peso (kg)': b.weight }));
+            if (bwRows.length > 0) {
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(bwRows), 'Peso Corporal');
+            }
+
+            if (wb.SheetNames.length === 0) {
+                showToast('⚠️ No hay datos en este rango para exportar.');
+                return;
+            }
+
+            const todayForFile = new Date().toISOString().split('T')[0];
+            const rangeSlug = reportRange === 'today' ? 'Hoy' : (reportRange === 'week' ? 'Semana' : 'Todo');
+            XLSX.writeFile(wb, `GymTracker_Informe_${rangeSlug}_${todayForFile}.xlsx`);
+            showToast('📊 Excel exportado correctamente');
+        }
+
         function downloadBackup() {
             const data = {
                 logs: logs,
