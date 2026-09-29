@@ -819,6 +819,8 @@
                         <option value="machine">🧱 Máquina (Salto de 5 kg)</option>
                         <option value="cable">🪢 Polea (Salto de 2.5 kg)</option>
                         <option value="bodyweight">🤸 Peso Corporal</option>
+                        <option value="kettlebell">🔔 Kettlebell (Salto de 2 kg)</option>
+                        <option value="band">🎗️ Banda Elástica</option>
                         <option value="accessory">🧰 Accesorio Específico</option>
                     </select>
                 </div>
@@ -873,6 +875,8 @@
                         <option value="machine">🧱 Máquina</option>
                         <option value="cable">🪢 Polea</option>
                         <option value="bodyweight">🤸 Peso Corporal</option>
+                        <option value="kettlebell">🔔 Kettlebell (Salto de 2 kg)</option>
+                        <option value="band">🎗️ Banda Elástica</option>
                         <option value="accessory">🧰 Accesorio Específico</option>
                     </select>
                 </div>
@@ -971,40 +975,47 @@
                 exercises: []
             },
             "Martes": {
-                name: "Fuerza + Potencia de Empuje",
+                name: "Potencia + Pierna + Empuje",
                 exercises: [
-                    { id: "mar_1", name: "Power Clean / Cargada", target: "4 series x 5, 5, 3, 3 reps", type: "barbell", setsCount: 4 },
-                    { id: "mar_2", name: "Press de Banca Plano", target: "4 series x 10, 8, 6, 4 reps (Piramidal)", type: "barbell", setsCount: 4 },
-                    { id: "mar_3", name: "Remo con Mancuerna / Barra", target: "4 series x 10, 8, 6, 6 reps (Piramidal)", type: "dumbbell", setsCount: 4 },
-                    { id: "mar_4", name: "Elevaciones Laterales", target: "3 series x 10 reps", type: "dumbbell", setsCount: 3, supersetGroup: "mar_s1", supersetLabel: "Hombros + Bíceps", supersetColor: "amber" },
-                    { id: "mar_5", name: "Curl de Bíceps con Mancuernas", target: "3 series x 10 reps", type: "dumbbell", setsCount: 3, supersetGroup: "mar_s1", supersetLabel: "Hombros + Bíceps", supersetColor: "amber" },
-                    { id: "mar_6", name: "Plancha con Toque de Hombro", target: "3 series x 12 reps", type: "bodyweight", setsCount: 3, supersetGroup: "mar_s2", supersetLabel: "Core", supersetColor: "blue" },
-                    { id: "mar_7", name: "Plancha Lateral", target: "3 series x 30s por lado", type: "bodyweight", setsCount: 3, supersetGroup: "mar_s2", supersetLabel: "Core", supersetColor: "blue" },
-                    { id: "mar_8", name: "Deadbug con Disco", target: "3 series x 12 reps", type: "accessory", setsCount: 3, supersetGroup: "mar_s2", supersetLabel: "Core", supersetColor: "blue" }
+                    { id: "mar_1", name: "Pogo Jumps", target: "2 series x 20 seg", type: "bodyweight", setsCount: 2, rest: 45 },
+                    { id: "mar_2", name: "Box Jump", target: "3 series x 4 reps · Cajón 40 cm", type: "accessory", setsCount: 3, rest: 75 },
+                    { id: "mar_3", name: "Power Clean", target: "4 series x 3 reps · 30-35 kg (sem 1)", type: "barbell", setsCount: 4, rest: 120 },
+                    { id: "mar_4", name: "Sentadilla con Barra", target: "4 series x 6 reps · 55-60 kg (sem 1)", type: "barbell", setsCount: 4, rest: 150 },
+                    { id: "mar_5", name: "Press de Banca", target: "4 series x 6-8 reps · 27.5-30 kg (sem 1)", type: "barbell", setsCount: 4, rest: 120 },
+                    { id: "mar_6", name: "KB Reverse Lunge (Goblet)", target: "3 series x 8 reps por lado · 8-12 kg", type: "kettlebell", setsCount: 3, rest: 90 },
+                    { id: "mar_7", name: "Pallof Press", target: "3 series x 10 reps por lado · Polea liviana", type: "accessory", setsCount: 3, rest: 45, supersetGroup: "mar_s1", supersetLabel: "Pallof + Copenhagen", supersetColor: "purple" },
+                    { id: "mar_8", name: "Copenhagen Plank", target: "3 series x 20 seg por lado", type: "bodyweight", setsCount: 3, rest: 45, supersetGroup: "mar_s1", supersetLabel: "Pallof + Copenhagen", supersetColor: "purple" }
                 ]
             },
             "Miércoles": {
-                name: "Fuerza de Poste & Pierna",
+                name: "Tracción + Hombro + Rotación + Lateral",
                 exercises: [
-                    { id: "mie_1", name: "Sentadilla con Barra", target: "4 series x 10, 8, 6, 4 reps (Piramidal)", type: "barbell", setsCount: 4 },
-                    { id: "mie_2", name: "Jalón al Pecho en Polea", target: "4 series x 10, 8, 6, 6 reps (Piramidal)", type: "cable", setsCount: 4 },
-                    { id: "mie_3", name: "Press Militar de Hombros", target: "3 series x 10, 8, 6 reps (Piramidal)", type: "barbell", setsCount: 3 },
-                    { id: "mie_4", name: "Peso Muerto Rumano", target: "3 series x 8 reps (Foco Isquios)", type: "barbell", setsCount: 3 },
-                    { id: "mie_5", name: "Plancha Frontal", target: "3 series x 45s", type: "bodyweight", setsCount: 3, supersetGroup: "mie_s1", supersetLabel: "Core", supersetColor: "blue" },
-                    { id: "mie_6", name: "Plancha con Deslizamiento", target: "3 series x 10 reps", type: "accessory", setsCount: 3, supersetGroup: "mie_s1", supersetLabel: "Core", supersetColor: "blue" },
-                    { id: "mie_7", name: "Elevación de Piernas", target: "3 series x 10-12 reps", type: "bodyweight", setsCount: 3, supersetGroup: "mie_s1", supersetLabel: "Core", supersetColor: "blue" }
+                    { id: "mie_1", name: "Skater Jumps", target: "3 series x 6 reps por lado", type: "bodyweight", setsCount: 3, rest: 60 },
+                    { id: "mie_2", name: "Lateral Bound & Stick", target: "3 series x 4 reps por lado", type: "bodyweight", setsCount: 3, rest: 60 },
+                    { id: "mie_3", name: "Med Ball Rotational Throw (pared)", target: "3 series x 6 reps por lado · 3-4 kg", type: "accessory", setsCount: 3, rest: 60 },
+                    { id: "mie_4", name: "Jalón al Pecho / Dominadas Asistidas", target: "4 series x 6-8 reps · 30-32.5 kg (sem 1)", type: "cable", setsCount: 4, rest: 90 },
+                    { id: "mie_5", name: "KB Press a Una Mano", target: "3 series x 8 reps por lado · 8-10 kg", type: "kettlebell", setsCount: 3, rest: 90 },
+                    { id: "mie_6", name: "Remo con KB a Una Mano", target: "3 series x 10 reps por lado · 12-16 kg", type: "kettlebell", setsCount: 3, rest: 90 },
+                    { id: "mie_7", name: "KB RDL a Una Pierna", target: "3 series x 8 reps por lado · 8-12 kg (rango sin molestia)", type: "kettlebell", setsCount: 3, rest: 90 },
+                    { id: "mie_8", name: "Elevaciones Laterales", target: "3 series x 10-12 reps · 6-7 kg", type: "dumbbell", setsCount: 3, rest: 60, supersetGroup: "mie_s1", supersetLabel: "Hombros + Bíceps", supersetColor: "amber" },
+                    { id: "mie_9", name: "Curl de Bíceps con Mancuernas", target: "3 series x 10-12 reps · 8-9 kg", type: "dumbbell", setsCount: 3, rest: 60, supersetGroup: "mie_s1", supersetLabel: "Hombros + Bíceps", supersetColor: "amber" },
+                    { id: "mie_10", name: "Dead Bug", target: "3 series x 10 reps · Peso corporal o disco liviano", type: "accessory", setsCount: 3, rest: 30 },
+                    { id: "mie_11", name: "Plancha Frontal", target: "3 series x 40-45 seg", type: "bodyweight", setsCount: 3, rest: 30 }
                 ]
             },
             "Viernes": {
-                name: "Cadena Completa Pre-Partido",
+                name: "Unilateral + Desaceleración + Prehab",
                 exercises: [
-                    { id: "vie_1", name: "Peso Muerto Convencional", target: "4 series x 10, 8, 6, 4 reps (Piramidal)", type: "barbell", setsCount: 4 },
-                    { id: "vie_2", name: "Press Inclinado con Mancuernas", target: "3 series x 10, 8, 6 reps (Piramidal)", type: "dumbbell", setsCount: 3 },
-                    { id: "vie_3", name: "Remo en Polea Baja", target: "3 series x 10, 8, 6 reps (Piramidal)", type: "cable", setsCount: 3 },
-                    { id: "vie_4", name: "Prensa 45° o Estocadas Búlgaras", target: "3 series x 8-10 reps por pierna", type: "machine", setsCount: 3 },
-                    { id: "vie_5", name: "Isometría de Oblicuos en Banco", target: "3 series x 30s por lado", type: "bodyweight", setsCount: 3, supersetGroup: "vie_s1", supersetLabel: "Core", supersetColor: "blue" },
-                    { id: "vie_6", name: "Abdominales con Disco Elevado", target: "3 series x 10-12 reps", type: "accessory", setsCount: 3, supersetGroup: "vie_s1", supersetLabel: "Core", supersetColor: "blue" },
-                    { id: "vie_7", name: "Mountain Climbers Lentos", target: "3 series x 30s", type: "bodyweight", setsCount: 3, supersetGroup: "vie_s1", supersetLabel: "Core", supersetColor: "blue" }
+                    { id: "vie_1", name: "Single-Leg Hop & Stick", target: "3 series x 5 reps por lado", type: "bodyweight", setsCount: 3, rest: 60 },
+                    { id: "vie_2", name: "Defensive Slide con Banda", target: "3 series x 15 seg · Banda liviana", type: "band", setsCount: 3, rest: 45 },
+                    { id: "vie_3", name: "Closeout + Frenada (5 m)", target: "3 series x 4 reps · Al 60% de velocidad", type: "bodyweight", setsCount: 3, rest: 60 },
+                    { id: "vie_4", name: "KB Deadlift", target: "4 series x 10 reps · 16-20 kg (sem 1) — desde sem 2: KB Swing, 12-16 kg", type: "kettlebell", setsCount: 4, rest: 90 },
+                    { id: "vie_5", name: "Estocada Búlgara", target: "3 series x 8 reps por lado · 8-10 kg por mano", type: "dumbbell", setsCount: 3, rest: 90 },
+                    { id: "vie_6", name: "Puente de Glúteo Unipodal", target: "3 series x 8 reps por lado (sem 1) — desde sem 2: Nordic Curl Asistido, 2x3-5", type: "bodyweight", setsCount: 3, rest: 60 },
+                    { id: "vie_7", name: "Press Inclinado con Mancuernas", target: "3 series x 8-10 reps · 8-9 kg", type: "dumbbell", setsCount: 3, rest: 60, supersetGroup: "vie_s1", supersetLabel: "Empuje + Tracción", supersetColor: "teal" },
+                    { id: "vie_8", name: "Remo en Polea Baja", target: "3 series x 10 reps · 40 kg", type: "cable", setsCount: 3, rest: 60, supersetGroup: "vie_s1", supersetLabel: "Empuje + Tracción", supersetColor: "teal" },
+                    { id: "vie_9", name: "Elevación de Talones a Una Pierna", target: "3 series x 12 reps por lado", type: "bodyweight", setsCount: 3, rest: 45 },
+                    { id: "vie_10", name: "Farmer Carry con KB", target: "3 series x 30 m · 12-16 kg por mano", type: "kettlebell", setsCount: 3, rest: 60 }
                 ]
             },
             "Sábado": {
@@ -1287,7 +1298,33 @@
             { name: "Remo en Polea Baja", type: "cable" },
             { name: "Curl Martillo Alternado", type: "dumbbell" },
             { name: "Curl Concentrado a Una Mano", type: "dumbbell" },
-            { name: "Extensión de Tríceps en Polea con Cuerda", type: "cable" }
+            { name: "Extensión de Tríceps en Polea con Cuerda", type: "cable" },
+            // Rutina de Potencia/Pliometría/Kettlebell (Martes/Miércoles/Viernes)
+            { name: "Pogo Jumps", type: "bodyweight" },
+            { name: "Box Jump", type: "accessory" },
+            { name: "Power Clean", type: "barbell" },
+            { name: "Press de Banca", type: "barbell" },
+            { name: "KB Reverse Lunge (Goblet)", type: "kettlebell" },
+            { name: "Pallof Press", type: "accessory" },
+            { name: "Copenhagen Plank", type: "bodyweight" },
+            { name: "Skater Jumps", type: "bodyweight" },
+            { name: "Lateral Bound & Stick", type: "bodyweight" },
+            { name: "Med Ball Rotational Throw (pared)", type: "accessory" },
+            { name: "Jalón al Pecho / Dominadas Asistidas", type: "cable" },
+            { name: "KB Press a Una Mano", type: "kettlebell" },
+            { name: "Remo con KB a Una Mano", type: "kettlebell" },
+            { name: "KB RDL a Una Pierna", type: "kettlebell" },
+            { name: "Dead Bug", type: "accessory" },
+            { name: "Single-Leg Hop & Stick", type: "bodyweight" },
+            { name: "Defensive Slide con Banda", type: "band" },
+            { name: "Closeout + Frenada (5 m)", type: "bodyweight" },
+            { name: "KB Deadlift", type: "kettlebell" },
+            { name: "KB Swing", type: "kettlebell" },
+            { name: "Estocada Búlgara", type: "dumbbell" },
+            { name: "Puente de Glúteo Unipodal", type: "bodyweight" },
+            { name: "Nordic Curl Asistido", type: "bodyweight" },
+            { name: "Elevación de Talones a Una Pierna", type: "bodyweight" },
+            { name: "Farmer Carry con KB", type: "kettlebell" }
         ];
 
         function seedMasterExerciseList() {
@@ -1645,7 +1682,10 @@
             } else if (type === 'cable') {
                 // Polea: mismo stack de ladrillos de 5kg que las máquinas
                 return Math.round(weight / 5) * 5;
-            } else if (type === 'bodyweight' || type === 'accessory') {
+            } else if (type === 'kettlebell') {
+                // Kettlebells de gimnasio comercial: suelen venir en saltos de 2kg
+                return Math.round(weight / 2) * 2;
+            } else if (type === 'band' || type === 'bodyweight' || type === 'accessory') {
                 return Math.round(weight);
             }
             return Math.round(weight);
@@ -1918,7 +1958,7 @@
                                     <option value="RPE 10">RPE 10</option>
                                     <option value="RPE 7">RPE 7</option>
                                 </select>
-                                <button onclick="registerSet('${ex.name}', '${ex.id}', '${ex.type}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl transition shadow active:scale-95 flex items-center justify-center gap-1 text-[11px]">
+                                <button onclick="registerSet('${ex.name}', '${ex.id}', '${ex.type}', ${ex.rest || 90})" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl transition shadow active:scale-95 flex items-center justify-center gap-1 text-[11px]">
                                     <i class="fa-solid fa-check"></i> Anotar
                                 </button>
                             </div>
@@ -2088,7 +2128,7 @@
             }
         }
 
-        function registerSet(exName, exId, equipType) {
+        function registerSet(exName, exId, equipType, restSeconds) {
             const weightInput = document.getElementById(`input-w-${exId}`);
             const repsInput = document.getElementById(`input-r-${exId}`);
             const rpeSelect = document.getElementById(`input-rpe-${exId}`);
@@ -2126,7 +2166,7 @@
             }
 
             renderTodayView();
-            startTimer(90);
+            startTimer(restSeconds || 90);
         }
 
         function registerHiitSet(exName, exId) {
